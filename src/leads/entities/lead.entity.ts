@@ -8,13 +8,16 @@ import Source from '../value-objects/source.vo.js';
 import Status from '../value-objects/status.vo.js';
 
 export class Lead {
-  id: Id;
-  name: Name;
-  email: Email;
-  cpf: CPF;
-  company: Company;
-  source: Source;
-  status: Status;
-  score: Score;
-  createdAt: Date;
+  constructor(
+    readonly id: Id,
+    readonly name: Name,
+    readonly email: Email,
+    readonly cpf: CPF,
+    readonly company: Company,
+    readonly source: Source,
+    readonly status: Status,
+    readonly score: Score,
+    readonly createdAt: Date,
+    readonly updatedAt: Date,
+  ) {}
 }

@@ -1,26 +1,91 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
+import { Lead } from './entities/lead.entity.js';
+import Company from './value-objects/company.vo.js';
+import CPF from './value-objects/cpf.vo.js';
+import Email from './value-objects/email.vo.js';
+import Id from './value-objects/id.vo.js';
+import Name from './value-objects/name.vo.js';
+import Score from './value-objects/score.vo.js';
+import Source from './value-objects/source.vo.js';
+import Status, { StatusValues } from './value-objects/status.vo.js';
 
 @Injectable()
 export class LeadsService {
-  create(createLeadDto: CreateLeadDto) {
-    return 'This action adds a new lead';
+  private readonly leads: Map<string, Lead> = new Map<string, Lead>();
+
+  create(createLeadDto: CreateLeadDto): Lead {
+    const lead = new Lead(
+      new Id(crypto.randomUUID()),
+      new Name(createLeadDto.firstName, createLeadDto.lastName),
+      new Email(createLeadDto.email),
+      new CPF(createLeadDto.cpf),
+      new Company(createLeadDto.companyName, createLeadDto.cnpj),
+      new Source(createLeadDto.source),
+      new Status(StatusValues.New),
+      new Score(0),
+      new Date(),
+      new Date(),
+    );
+
+    this.leads.set(lead.id.value, lead);
+
+    return lead;
   }
 
-  findAll() {
-    return `This action returns all leads`;
+  findAll(): Lead[] {
+    return Array.from(this.leads.values());
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} lead`;
+  findOne(id: string): Lead {
+    const lead = this.leads.get(id);
+
+    if (!lead) {
+      throw new NotFoundException('Lead nao encontrado');
+    }
+
+    return lead;
   }
 
-  update(id: number, updateLeadDto: UpdateLeadDto) {
-    return `This action updates a #${id} lead`;
+  update(id: string, updateLeadDto: UpdateLeadDto): Lead {
+    const lead = this.leads.get(id);
+
+    if (!lead) {
+      throw new NotFoundException('Lead nao encontrado');
+    }
+
+    const updatedLead = new Lead(
+      lead.id,
+      new Name(
+        updateLeadDto.firstName ?? lead.name.firstName,
+        updateLeadDto.lastName ?? lead.name.lastName,
+      ),
+      new Email(updateLeadDto.email ?? lead.email.value),
+      new CPF(updateLeadDto.cpf ?? lead.cpf.value),
+      new Company(
+        updateLeadDto.companyName ?? lead.company.name,
+        updateLeadDto.cnpj ?? lead.company.cnpj.value,
+      ),
+      new Source(updateLeadDto.source ?? lead.source.value),
+      new Status(updateLeadDto.status ?? lead.status.value),
+      new Score(updateLeadDto.score ?? lead.score.value),
+      lead.createdAt,
+      new Date(),
+    );
+
+    this.leads.set(id, updatedLead);
+
+    return updatedLead;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} lead`;
+  remove(id: string): void {
+    const lead = this.leads.get(id);
+
+    if (!lead) {
+      throw new NotFoundException('Lead nao encontrado');
+    }
+
+    this.leads.delete(id);
   }
 }
