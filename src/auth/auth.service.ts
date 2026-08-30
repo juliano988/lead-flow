@@ -1,26 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto.js';
-import { UpdateAuthDto } from './dto/update-auth.dto.js';
+import { RegisterUserDto } from '../user/dto/register-user.dto.js';
+import { UserService } from '../user/user.service.js';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
-  }
+  constructor(private readonly userService: UserService) {}
 
-  findAll() {
-    return `This action returns all auth`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
-  }
-
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  async register(registerUserDto: RegisterUserDto) {
+    // 1. verificar se email ja existe
+    // 2. validar Password VO
+    // 3. gerar hash com bcrypt
+    // 4. criar Id, Name e Email VOs
+    // 5. chamar userService.create(...)
+    // 6. retornar dados seguros do usuário
   }
 }

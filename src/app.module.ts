@@ -5,7 +5,6 @@ import { AppService } from './app.service.js';
 import { LeadsModule } from './leads/leads.module.js';
 import { UserModule } from './user/user.module.js';
 import { AuthModule } from './auth/auth.module.js';
-import { AuthModule } from './auth/auth.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
