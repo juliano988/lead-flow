@@ -1,30 +1,25 @@
-import { isCNPJ } from 'brazilian-values';
+import CNPJ from './cnpj.vo.js';
 
 export default class Company {
   private readonly _name: string;
-  private readonly _cnpj: string;
+  private readonly _cnpj: CNPJ;
 
   constructor(name: string, cnpj: string) {
     const normalizedName = name.trim();
-    const normalizedCnpj = cnpj.trim();
 
     if (normalizedName.length === 0) {
       throw new Error('Nome inválido');
     }
 
-    if (!isCNPJ(normalizedCnpj)) {
-      throw new Error('CNPJ inválido');
-    }
-
     this._name = normalizedName;
-    this._cnpj = normalizedCnpj;
+    this._cnpj = new CNPJ(cnpj);
   }
 
   get name(): string {
     return this._name;
   }
 
-  get cnpj(): string {
+  get cnpj(): CNPJ {
     return this._cnpj;
   }
 
