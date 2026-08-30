@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { User } from './entities/user.entity.js';
 import Email from './value-objects/email.vo.js';
 import Id from './value-objects/id.vo.js';
@@ -30,12 +30,24 @@ export class UserService {
   }
 
   findByEmail(email: string): User | undefined {
-    return Array.from(this.users.values()).find((user) =>
+    const user = Array.from(this.users.values()).find((user) =>
       user.email.equals(new Email(email)),
     );
+
+    if (!user) {
+      throw new NotFoundException('Usuário nao encontrado');
+    }
+
+    return user;
   }
 
-  findById(id: string) {
-    return this.users.get(id);
+  findById(id: string): User | undefined {
+    const user = this.users.get(id);
+
+    if (!user) {
+      throw new NotFoundException('Usuário nao encontrado');
+    }
+
+    return user;
   }
 }
