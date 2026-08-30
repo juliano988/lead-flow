@@ -2,13 +2,14 @@ import Company from '../value-objects/company.vo.js';
 import Email from '../value-objects/email.vo.js';
 import Id from '../value-objects/id.vo.js';
 import Name from '../value-objects/name.vo.js';
+import Source from '../value-objects/source.vo.js';
 
 export class Lead {
   id: Id;
   name: Name;
   email: Email;
   company: Company;
-  source: string;
+  source: Source;
   status: string;
   score: number;
   createdAt: Date;
