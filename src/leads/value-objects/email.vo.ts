@@ -5,7 +5,7 @@ export default class Email {
     const normalizedValue = value.trim().toLocaleLowerCase();
 
     if (!Email.isValid(normalizedValue)) {
-      throw new Error('Email invalido');
+      throw new Error('Email inválido');
     }
 
     this._value = normalizedValue;
