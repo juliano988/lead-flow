@@ -1,5 +1,12 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { LoginDto } from '../user/dto/login.dto.js';
 import { RegisterUserDto } from '../user/dto/register-user.dto.js';
 import { User } from '../user/entities/user.entity.js';
 import { UserService } from '../user/user.service.js';
@@ -10,7 +17,10 @@ import Password from '../user/value-objects/password.vo.js';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async register(registerUserDto: RegisterUserDto): Promise<User> {
     const user = this.userService.findByEmail(registerUserDto.email);
@@ -27,6 +37,32 @@ export class AuthService {
       name: new Name(registerUserDto.firstName, registerUserDto.lastName),
       email: new Email(registerUserDto.email),
       passwordHash,
+    });
+  }
+
+  async authenticate(login: LoginDto): Promise<string> {
+    const user = this.userService.findByEmail(login.email);
+
+    if (!user) {
+      throw new UnauthorizedException('E-mail ou senha inválidos');
+    }
+
+    const passwordMatches = await bcrypt.compare(
+      login.password,
+      user.passwordHash,
+    );
+
+    if (!passwordMatches) {
+      throw new UnauthorizedException('E-mail ou senha inválidos');
+    }
+
+    return this.generateAccessToken(user);
+  }
+
+  private generateAccessToken(user: User): string {
+    return this.jwtService.sign({
+      sub: user.id.value,
+      email: user.email.value,
     });
   }
 }
