@@ -31,6 +31,7 @@ async function bootstrap() {
     .setTitle('LeadFlow API')
     .setDescription('API para prospecção e qualificação de leads')
     .setVersion('1.0')
+    .addCookieAuth('access_token')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
