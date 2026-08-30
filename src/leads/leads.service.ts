@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
+import LeadResponseDto from './dto/lead-response.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { Lead } from './entities/lead.entity.js';
 import Company from './value-objects/company.vo.js';
