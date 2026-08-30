@@ -1,34 +1,41 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { UserService } from './user.service.js';
 import { RegisterUserDto } from './dto/register-user.dto.js';
 import { UpdateUserDto } from './dto/update-user.dto.js';
+import { randomUUID } from 'crypto';
+import Id from './value-objects/id.vo.js';
+import Name from './value-objects/name.vo.js';
+import Email from './value-objects/email.vo.js';
 
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post()
-  create(@Body() createUserDto: RegisterUserDto) {
-    return this.userService.create(createUserDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.userService.findAll();
+  create(@Body() registerUserDto: RegisterUserDto) {
+    return this.userService.create({
+      id: new Id(randomUUID()),
+      name: new Name(registerUserDto.firstName, registerUserDto.lastName),
+      email: new Email(registerUserDto.email),
+      passwordHash: registerUserDto.password,
+    });
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findById(+id);
+  findById(@Param('id') id: string) {
+    return this.userService.findById(id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @Get(':email')
+  findByEmail(@Param('email') email: string) {
+    return this.userService.findByEmail(email);
   }
 }
