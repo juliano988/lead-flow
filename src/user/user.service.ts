@@ -1,26 +1,41 @@
 import { Injectable } from '@nestjs/common';
-import { RegisterUserDto } from './dto/register-user.dto.js';
-import { UpdateUserDto } from './dto/update-user.dto.js';
+import { User } from './entities/user.entity.js';
+import Email from './value-objects/email.vo.js';
+import Id from './value-objects/id.vo.js';
+import Name from './value-objects/name.vo.js';
 
+export interface CresteUserInput {
+  id: Id;
+  name: Name;
+  email: Email;
+  passwordHash: string;
+}
 @Injectable()
 export class UserService {
-  create(createUserDto: RegisterUserDto) {
-    return 'This action adds a new user';
+  private readonly users: Map<string, User> = new Map<string, User>();
+
+  create(cresteUserInput: CresteUserInput): User {
+    const user = new User(
+      cresteUserInput.id,
+      cresteUserInput.name,
+      cresteUserInput.email,
+      cresteUserInput.passwordHash,
+      new Date(),
+      new Date(),
+    );
+
+    this.users.set(user.id.value, user);
+
+    return user;
   }
 
-  findAll() {
-    return `This action returns all user`;
+  findByEmail(email: string): User | undefined {
+    return Array.from(this.users.values()).find((user) =>
+      user.email.equals(new Email(email)),
+    );
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
-  }
-
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  findById(id: string) {
+    return this.users.get(id);
   }
 }

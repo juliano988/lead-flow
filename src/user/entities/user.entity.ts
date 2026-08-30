@@ -7,7 +7,8 @@ export class User {
     readonly id: Id,
     readonly name: Name,
     readonly email: Email,
-    readonly password: string,
+    readonly passwordHash: string,
     readonly createdAt: Date,
+    readonly updatedAt: Date,
   ) {}
 }
