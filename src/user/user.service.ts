@@ -29,7 +29,7 @@ export class UserService {
     return user;
   }
 
-  findByEmail(email: string): User | undefined {
+  findByEmail(email: string): User {
     const user = Array.from(this.users.values()).find((user) =>
       user.email.equals(new Email(email)),
     );
@@ -41,7 +41,7 @@ export class UserService {
     return user;
   }
 
-  findById(id: string): User | undefined {
+  findById(id: string): User {
     const user = this.users.get(id);
 
     if (!user) {

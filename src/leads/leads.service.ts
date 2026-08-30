@@ -1,6 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
-import LeadResponseDto from './dto/lead-response.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { Lead } from './entities/lead.entity.js';
 import Company from './value-objects/company.vo.js';
@@ -40,21 +39,11 @@ export class LeadsService {
   }
 
   findOne(id: string): Lead {
-    const lead = this.leads.get(id);
-
-    if (!lead) {
-      throw new NotFoundException('Lead nao encontrado');
-    }
-
-    return lead;
+    return this.findLead(id);
   }
 
   update(id: string, updateLeadDto: UpdateLeadDto): Lead {
-    const lead = this.leads.get(id);
-
-    if (!lead) {
-      throw new NotFoundException('Lead nao encontrado');
-    }
+    const lead = this.findLead(id);
 
     const updatedLead = new Lead(
       lead.id,
@@ -81,12 +70,17 @@ export class LeadsService {
   }
 
   remove(id: string): void {
+    this.findLead(id);
+    this.leads.delete(id);
+  }
+
+  private findLead(id: string): Lead {
     const lead = this.leads.get(id);
 
     if (!lead) {
       throw new NotFoundException('Lead nao encontrado');
     }
 
-    this.leads.delete(id);
+    return lead;
   }
 }
