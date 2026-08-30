@@ -1,7 +1,8 @@
 import Email from '../value-objects/email.vo.js';
+import Id from '../value-objects/id.vo.js';
 
 export class Lead {
-  id: string;
+  id: Id;
   name: string;
   email: Email;
   company: string;
