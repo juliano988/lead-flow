@@ -69,8 +69,8 @@ export class LeadsService {
         updateLeadDto.cnpj ?? lead.company.cnpj.value,
       ),
       new Source(updateLeadDto.source ?? lead.source.value),
-      new Status(updateLeadDto.status ?? lead.status.value),
-      new Score(updateLeadDto.score ?? lead.score.value),
+      new Status(lead.status.value),
+      new Score(lead.score.value),
       lead.createdAt,
       new Date(),
     );

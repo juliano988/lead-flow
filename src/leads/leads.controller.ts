@@ -1,17 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
 } from '@nestjs/common';
-import { LeadsService } from './leads.service.js';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
+import LeadResponseDto from './dto/lead-response.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { Lead } from './entities/lead.entity.js';
-import LeadResponseDto from './dto/lead-response.dto.js';
+import { LeadsService } from './leads.service.js';
 
 @Controller('leads')
 export class LeadsController {
@@ -28,17 +29,20 @@ export class LeadsController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.toResponse(this.leadsService.findOne(id));
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLeadDto: UpdateLeadDto) {
+  update(
+    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
+    @Body() updateLeadDto: UpdateLeadDto,
+  ) {
     return this.toResponse(this.leadsService.update(id, updateLeadDto));
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
     return this.leadsService.remove(id);
   }
 
