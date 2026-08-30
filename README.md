@@ -1,114 +1,165 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# LeadFlow
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Plataforma de prospeccao e qualificacao de leads construída para estudar NestJS em um contexto próximo de um produto de Growth e Business Engineering.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+O sistema recebe leads de diferentes fontes, armazena seus dados, calcula uma pontuacao de interesse e, no futuro, executa acoes como notificacoes, webhooks e sincronizacao com CRM.
 
-## Description
+## Fluxo do produto
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+```mermaid
+flowchart TD
+  landing[Landing Page] --> ingestion[Lead Ingestion]
+  csv[CSV] --> ingestion
+  api[API] --> ingestion
 
-## Project setup
+  ingestion --> leads[Leads]
+  leads --> scoring[Lead Scoring]
+  scoring --> qualified[Qualified]
+  scoring --> rejected[Rejected]
 
-```bash
-$ bun install
+  qualified --> actions[Actions]
+  actions --> webhook[Webhook]
+  actions --> email[Email]
+  actions --> crm[CRM]
 ```
 
-## Compile and run the project
+## Objetivo
 
-```bash
-# development
-$ bun run start
+O LeadFlow e um laboratorio incremental de NestJS. A arquitetura cresce somente quando um novo assunto exigir isso, evitando adicionar banco, fila e integracoes antes de haver uma necessidade concreta.
 
-# watch mode
-$ bun run start:dev
+## Entidade principal
 
-# production mode
-$ bun run start:prod
+```ts
+Lead {
+  id: string;
+  name: string;
+  email: string;
+  company: string;
+  source: string;
+  status: LeadStatus;
+  score: number;
+  createdAt: Date;
+}
 ```
 
-## Run tests
+Os campos `id`, `status`, `score` e `createdAt` sao controlados pela aplicacao. Os dados de entrada do usuario sao validados por DTOs.
 
-```bash
-# unit tests
-$ bun run test
+## Roadmap de estudo
 
-# e2e tests
-$ bun run test:e2e
+### Fase 1: CRUD de leads
 
-# test coverage
-$ bun run test:cov
+Endpoints iniciais:
+
+```text
+POST   /leads
+GET    /leads
+GET    /leads/:id
+PATCH  /leads/:id
+DELETE /leads/:id
 ```
 
-## Deployment
+Conceitos: modules, controllers, providers, services, DTOs, validation pipes, dependency injection, configuracao e exception handling.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Fase 2: Autenticacao
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ bun install -g @nestjs/mau
-$ mau deploy
+```text
+POST /auth/register
+POST /auth/login
+GET  /me
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Protecao das rotas de leads com JWT, Passport, guards, decorators e autorizacao.
 
-## Observability
+### Fase 3: Persistencia
 
-In production applications, observability is essential for understanding how your system behaves, detecting issues early, and maintaining reliable performance.
+PostgreSQL com Prisma:
 
-[NestJS Observe](https://observe.nestjs.com) automatically instruments your NestJS application, giving you deep visibility into your system with minimal setup:
+```text
+LeadService -> PrismaService -> PostgreSQL
+```
 
-- **Distributed tracing:** Follow requests across services and understand how they flow through your system.
-- **Waterfall analysis:** Visualize request execution and identify slow operations, bottlenecks, and unexpected delays.
-- **Performance analysis:** Analyze application performance in real time and quickly pinpoint areas that need optimization.
-- **Metrics:** Track key application and infrastructure metrics to understand system health and performance trends.
-- **Logging:** Centralize and correlate logs with traces and other telemetry to make debugging easier.
-- **Error tracking:** Detect errors quickly and investigate their root causes with the surrounding context.
-- **SLA monitoring:** Track service-level objectives and identify when your application is approaching or exceeding defined thresholds.
-- **Alarms and alerts:** Set up alerts for critical errors, performance degradation, SLA violations, and other anomalies so your team can react quickly.
+Nest organiza a aplicacao; Prisma e a camada de acesso aos dados.
 
-## Resources
+### Fase 4: Lead scoring
 
-Check out a few resources that may come in handy when working with NestJS:
+Um provider dedicado calcula a pontuacao do lead:
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Auto-instrument your application with [NestJS Observer](https://observer.nestjs.com). Distributed tracing, metrics, and logging made easy. Error tracking and performance monitoring for your NestJS applications.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```text
+empresa grande       +30
+email corporativo    +20
+origem: Google       +10
+visitou pricing      +20
+baixou material      +10
+```
 
-## Support
+Regras iniciais de classificacao:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```text
+score >= 70  QUALIFIED
+score >= 40  NURTURE
+score < 40   REJECTED
+```
 
-## Stay in touch
+### Fase 5: Eventos
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+A criacao de um lead publica `LeadCreatedEvent`, permitindo que scoring, analytics e notificacoes sejam processados de forma desacoplada.
 
-## License
+### Fase 6: Filas
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Redis e BullMQ para mover scoring, enriquecimento e notificacoes para processamento assincrono, mantendo a resposta HTTP rapida.
+
+### Fase 7: Integracoes externas
+
+Enriquecimento de dados da empresa via API, com `HttpModule`, timeout, retry, logs e tratamento de falhas.
+
+### Fase 8: Observabilidade
+
+Correlation ID, logs estruturados, metricas e rastreabilidade para entender o ciclo de vida de cada lead.
+
+### Fase 9: Testes
+
+- Unitarios para `LeadScoringService`, `LeadsService` e `EnrichmentService`.
+- Integracao entre controller e banco.
+- E2E para o fluxo completo de criacao e processamento de leads.
+
+### Fase 10: Documentacao
+
+Swagger com DTOs, respostas, status HTTP e autenticacao documentados.
+
+## Estrutura inicial
+
+```text
+src/
+  app.module.ts
+  main.ts
+  leads/
+    dto/
+    entities/
+    leads.controller.ts
+    leads.service.ts
+    leads.module.ts
+```
+
+## Executando localmente
+
+Instale as dependencias:
+
+```bash
+bun install
+```
+
+Inicie em desenvolvimento:
+
+```bash
+bun run start:dev
+```
+
+A API fica disponivel em `http://localhost:3000`.
+
+## Testes
+
+```bash
+bun run test
+bun run test:e2e
+bun run test:cov
+```
