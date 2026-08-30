@@ -35,4 +35,8 @@ export default class Source {
       (sourceValue) => normalizedValue === sourceValue,
     );
   }
+
+  equals(other: Source): boolean {
+    return this._value === other._value;
+  }
 }
