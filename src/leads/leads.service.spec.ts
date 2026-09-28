@@ -37,7 +37,7 @@ describe('LeadsService', () => {
   it('lista os leads criados', () => {
     const createdLead = service.create(validLead);
 
-    const leads = service.find();
+    const leads = service.findAll();
 
     expect(leads).toHaveLength(1);
     expect(leads[0].id.value).toBe(createdLead.id.value);
@@ -46,14 +46,14 @@ describe('LeadsService', () => {
   it('busca um lead pelo ID', () => {
     const createdLead = service.create(validLead);
 
-    const foundLead = service.findById(createdLead.id.value);
+    const foundLead = service.findOne(createdLead.id.value);
 
     expect(foundLead).toBe(createdLead);
   });
 
   it('lanca NotFoundException ao buscar um ID inexistente', () => {
     expect(() =>
-      service.findById('550e8400-e29b-41d4-a716-446655440000'),
+      service.findOne('550e8400-e29b-41d4-a716-446655440000'),
     ).toThrow(NotFoundException);
   });
 
@@ -75,7 +75,7 @@ describe('LeadsService', () => {
       createdLead.updatedAt.getTime(),
     );
 
-    expect(service.findById(createdLead.id.value)).toBe(updatedLead);
+    expect(service.findOne(createdLead.id.value)).toBe(updatedLead);
   });
 
   it('remove um lead existente', () => {
@@ -83,8 +83,8 @@ describe('LeadsService', () => {
 
     service.remove(createdLead.id.value);
 
-    expect(service.find()).toEqual([]);
-    expect(() => service.findById(createdLead.id.value)).toThrow(
+    expect(service.findAll()).toEqual([]);
+    expect(() => service.findOne(createdLead.id.value)).toThrow(
       NotFoundException,
     );
   });

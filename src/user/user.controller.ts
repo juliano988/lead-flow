@@ -31,21 +31,21 @@ export class UserController {
       pageCount: users.length,
       totalItems: count,
       totalPages: Math.ceil(count / pageSize),
-      data: users.map((user) => this.toUserResponse(user)),
+      data: users.map((user) => this.toResponse(user)),
     };
   }
 
   @Get(':id')
   async findById(@Param('id') id: string) {
-    return this.toUserResponse(await this.userService.findById(id));
+    return this.toResponse(await this.userService.findById(id));
   }
 
   @Get('by-email/:email')
   async findByEmail(@Param('email') email: string) {
-    return this.toUserResponse(await this.userService.findByEmail(email));
+    return this.toResponse(await this.userService.findByEmail(email));
   }
 
-  private toUserResponse(user: User): UserResponseDto {
+  private toResponse(user: User): UserResponseDto {
     return {
       id: user.id.value,
       firstName: user.name.firstName,

@@ -1,6 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { Lead } from './entities/lead.entity.js';
@@ -12,7 +16,7 @@ import Id from './value-objects/id.vo.js';
 import Name from './value-objects/name.vo.js';
 import Score from './value-objects/score.vo.js';
 import Source from './value-objects/source.vo.js';
-import Status, { StatusValues } from './value-objects/status.vo.js';
+import Status from './value-objects/status.vo.js';
 
 @Injectable()
 export class LeadsService {
@@ -22,25 +26,45 @@ export class LeadsService {
   ) {}
 
   async create(createLeadDto: CreateLeadDto): Promise<Lead> {
+    const name = new Name(createLeadDto.firstName, createLeadDto.lastName);
+    const company = new Company(createLeadDto.companyName, createLeadDto.cnpj);
+
     const lead = await this.leadModel.create({
-      firstName: createLeadDto.firstName,
-      lastName: createLeadDto.lastName,
-      email: createLeadDto.email,
-      cpf: createLeadDto.cpf,
+      firstName: name.firstName,
+      lastName: name.lastName,
+      email: new Email(createLeadDto.email).value,
+      cpf: new CPF(createLeadDto.cpf).value,
       source: new Source(createLeadDto.source).value,
       company: {
-        name: createLeadDto.companyName,
-        cnpj: createLeadDto.cnpj,
+        name: company.name,
+        cnpj: company.cnpj.value,
       },
     });
 
     return this.toDomain(lead);
   }
 
-  async find(): Promise<Array<Lead>> {
-    return (await this.leadModel.find().lean()).map((lead) =>
-      this.toDomain(lead),
-    );
+  async find(page: number, pageSize: number): Promise<Lead[]> {
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(pageSize) ||
+      pageSize < 1
+    ) {
+      throw new BadRequestException(
+        'Página e tamanho devem ser inteiros positivos',
+      );
+    }
+
+    const skip = (page - 1) * pageSize;
+
+    const users = await this.leadModel.find().skip(skip).limit(pageSize).lean();
+
+    return users.map((user) => this.toDomain(user));
+  }
+
+  async count(): Promise<number> {
+    return this.leadModel.countDocuments().exec();
   }
 
   async findById(id: string): Promise<Lead> {
@@ -56,19 +80,24 @@ export class LeadsService {
   async update(id: string, updateLeadDto: UpdateLeadDto): Promise<Lead> {
     const lead = await this.findById(id);
 
+    const update = mongoose.omitUndefined({
+      firstName: updateLeadDto.firstName,
+      lastName: updateLeadDto.lastName,
+      email: updateLeadDto.email,
+      cpf: updateLeadDto.cpf,
+      source: updateLeadDto.source,
+      'company.name': updateLeadDto.companyName,
+      'company.cnpj': updateLeadDto.cnpj,
+    });
+
     const updatedLead = await this.leadModel
       .findByIdAndUpdate(
-        lead.id,
+        lead.id.value,
+        { $set: update },
         {
-          firstName: updateLeadDto.firstName,
-          lastName: updateLeadDto.lastName,
-          email: updateLeadDto.email,
-          cpf: updateLeadDto.cpf,
-          companyName: updateLeadDto.companyName,
-          cnpj: updateLeadDto.cnpj,
-          source: updateLeadDto.source,
+          new: true,
+          runValidators: true,
         },
-        { new: true, runValidators: true },
       )
       .lean();
 
@@ -93,10 +122,10 @@ export class LeadsService {
       new CPF(lead.cpf),
       new Company(lead.company.name, lead.company.cnpj),
       new Source(lead.source),
-      new Status(StatusValues.New),
-      new Score(0),
-      new Date(),
-      new Date(),
+      new Status(lead.status),
+      new Score(lead.score),
+      lead.createdAt,
+      lead.updatedAt,
     );
   }
 }

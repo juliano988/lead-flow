@@ -1,12 +1,14 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
-  ParseUUIDPipe,
+  ParseIntPipe,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -27,10 +29,21 @@ export class LeadsController {
   }
 
   @Get()
-  async findAll() {
-    return (await this.leadsService.find()).map((lead) =>
-      this.toResponse(lead),
-    );
+  async find(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number,
+  ) {
+    const users = await this.leadsService.find(page, pageSize);
+    const count = await this.leadsService.count();
+
+    return {
+      page: page,
+      pageSize: pageSize,
+      pageCount: users.length,
+      totalItems: count,
+      totalPages: Math.ceil(count / pageSize),
+      data: users.map((user) => this.toResponse(user)),
+    };
   }
 
   @Get(':id')
@@ -45,7 +58,7 @@ export class LeadsController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.leadsService.remove(id);
+    return this.toResponse(await this.leadsService.remove(id));
   }
 
   private toResponse(lead: Lead): LeadResponseDto {
