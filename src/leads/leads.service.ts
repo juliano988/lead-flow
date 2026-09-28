@@ -57,15 +57,19 @@ export class LeadsService {
     const lead = await this.findById(id);
 
     const updatedLead = await this.leadModel
-      .findByIdAndUpdate(lead.id, {
-        firstName: updateLeadDto.firstName,
-        lastName: updateLeadDto.lastName,
-        email: updateLeadDto.email,
-        cpf: updateLeadDto.cpf,
-        companyName: updateLeadDto.companyName,
-        cnpj: updateLeadDto.cnpj,
-        source: updateLeadDto.source,
-      })
+      .findByIdAndUpdate(
+        lead.id,
+        {
+          firstName: updateLeadDto.firstName,
+          lastName: updateLeadDto.lastName,
+          email: updateLeadDto.email,
+          cpf: updateLeadDto.cpf,
+          companyName: updateLeadDto.companyName,
+          cnpj: updateLeadDto.cnpj,
+          source: updateLeadDto.source,
+        },
+        { new: true, runValidators: true },
+      )
       .lean();
 
     return this.toDomain(updatedLead as LeadRecord);
@@ -83,7 +87,7 @@ export class LeadsService {
 
   private toDomain(lead: LeadRecord): Lead {
     return new Lead(
-      new Id(crypto.randomUUID()),
+      new Id(lead._id.toString()),
       new Name(lead.firstName, lead.lastName),
       new Email(lead.email),
       new CPF(lead.cpf),
