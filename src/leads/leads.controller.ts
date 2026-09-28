@@ -22,30 +22,29 @@ export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
 
   @Post()
-  create(@Body() createLeadDto: CreateLeadDto) {
-    return this.toResponse(this.leadsService.create(createLeadDto));
+  async create(@Body() createLeadDto: CreateLeadDto) {
+    return this.toResponse(await this.leadsService.create(createLeadDto));
   }
 
   @Get()
-  findAll() {
-    return this.leadsService.findAll().map((lead) => this.toResponse(lead));
+  async findAll() {
+    return (await this.leadsService.find()).map((lead) =>
+      this.toResponse(lead),
+    );
   }
 
   @Get(':id')
-  findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
-    return this.toResponse(this.leadsService.findOne(id));
+  async findOne(@Param('id') id: string) {
+    return this.toResponse(await this.leadsService.findById(id));
   }
 
   @Patch(':id')
-  update(
-    @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    @Body() updateLeadDto: UpdateLeadDto,
-  ) {
-    return this.toResponse(this.leadsService.update(id, updateLeadDto));
+  async update(@Param('id') id: string, @Body() updateLeadDto: UpdateLeadDto) {
+    return this.toResponse(await this.leadsService.update(id, updateLeadDto));
   }
 
   @Delete(':id')
-  remove(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {
+  async remove(@Param('id') id: string) {
     return this.leadsService.remove(id);
   }
 

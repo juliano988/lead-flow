@@ -1,7 +1,8 @@
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
-import { IsCpf } from '../validators/is-cpf.validator.js';
-import { IsCnpj } from '../validators/is-cnpj.validator.js';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsEmail, IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsCnpj } from '../validators/is-cnpj.validator.js';
+import { IsCpf } from '../validators/is-cpf.validator.js';
+import { SourceValues } from '../value-objects/source.vo.js';
 
 export class CreateLeadDto {
   @IsString()
@@ -39,5 +40,10 @@ export class CreateLeadDto {
 
   @IsString()
   @IsNotEmpty()
+  @IsEnum(SourceValues)
+  @ApiProperty({
+    enum: SourceValues,
+    example: SourceValues.LandingPage,
+  })
   source: string;
 }
