@@ -35,10 +35,15 @@ export class AuthService {
   }
 
   async authenticate(login: LoginDto): Promise<string> {
-    const user = this.userService.findByEmail(login.email);
+    let user: User;
+    try {
+      user = this.userService.findByEmail(login.email);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new UnauthorizedException('E-mail ou senha inválidos');
+      }
 
-    if (!user) {
-      throw new UnauthorizedException('E-mail ou senha inválidos');
+      throw error;
     }
 
     const passwordMatches = await bcrypt.compare(

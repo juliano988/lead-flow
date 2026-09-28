@@ -8,7 +8,7 @@ import Email from './value-objects/email.vo.js';
 import Id from './value-objects/id.vo.js';
 import Name from './value-objects/name.vo.js';
 
-export interface CresteUserInput {
+export interface CreateUserInput {
   id: Id;
   name: Name;
   email: Email;
@@ -18,20 +18,20 @@ export interface CresteUserInput {
 export class UserService {
   private readonly users: Map<string, User> = new Map<string, User>();
 
-  create(cresteUserInput: CresteUserInput): User {
-    const emailExists = Array.from(this.users.values()).some((user) =>
-      user.email.equals(cresteUserInput.email),
-    );
+  create(createUserInput: CreateUserInput): User {
+    if (this.existById(createUserInput.id.value)) {
+      throw new ConflictException('ID de usuário já cadastrado');
+    }
 
-    if (this.users.has(cresteUserInput.id.value) || emailExists) {
-      throw new ConflictException('Usuário já cadastrado');
+    if (this.existByEmail(createUserInput.email.value)) {
+      throw new ConflictException('E-mail já cadastrado');
     }
 
     const user = new User(
-      cresteUserInput.id,
-      cresteUserInput.name,
-      cresteUserInput.email,
-      cresteUserInput.passwordHash,
+      createUserInput.id,
+      createUserInput.name,
+      createUserInput.email,
+      createUserInput.passwordHash,
       new Date(),
       new Date(),
     );
@@ -61,5 +61,15 @@ export class UserService {
     }
 
     return user;
+  }
+
+  existById(id: string): boolean {
+    return this.users.has(id);
+  }
+
+  existByEmail(email: string): boolean {
+    return Array.from(this.users.values()).some((user) =>
+      user.email.equals(new Email(email)),
+    );
   }
 }
