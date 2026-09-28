@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service.js';
 import { RegisterUserDto } from './dto/register-user.dto.js';
@@ -14,7 +15,9 @@ import { randomUUID } from 'crypto';
 import Id from './value-objects/id.vo.js';
 import Name from './value-objects/name.vo.js';
 import Email from './value-objects/email.vo.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 
+@UseGuards(JwtAuthGuard)
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
@@ -31,11 +34,13 @@ export class UserController {
 
   @Get(':id')
   findById(@Param('id') id: string) {
+    // TODO Retornar DTO
     return this.userService.findById(id);
   }
 
   @Get(':email')
   findByEmail(@Param('email') email: string) {
+    // TODO Retornar DTO
     return this.userService.findByEmail(email);
   }
 }

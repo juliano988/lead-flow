@@ -7,13 +7,16 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
 import LeadResponseDto from './dto/lead-response.dto.js';
 import { UpdateLeadDto } from './dto/update-lead.dto.js';
 import { Lead } from './entities/lead.entity.js';
 import { LeadsService } from './leads.service.js';
 
+@UseGuards(JwtAuthGuard)
 @Controller('leads')
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
