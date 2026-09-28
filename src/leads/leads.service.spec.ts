@@ -1,9 +1,19 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
+import { Model, Types } from 'mongoose';
 import { CreateLeadDto } from './dto/create-lead.dto.js';
+import { LeadRecord } from './schemas/lead.schema.js';
 import { LeadsService } from './leads.service.js';
 
 describe('LeadsService', () => {
   let service: LeadsService;
+  let leadModel: {
+    create: ReturnType<typeof vi.fn>;
+    find: ReturnType<typeof vi.fn>;
+    countDocuments: ReturnType<typeof vi.fn>;
+    findById: ReturnType<typeof vi.fn>;
+    findByIdAndUpdate: ReturnType<typeof vi.fn>;
+    findByIdAndDelete: ReturnType<typeof vi.fn>;
+  };
 
   const validLead: CreateLeadDto = {
     firstName: 'Carla',
@@ -15,83 +25,154 @@ describe('LeadsService', () => {
     source: 'landing-page',
   };
 
-  beforeEach(() => {
-    service = new LeadsService();
+  const createRecord = (overrides: Partial<LeadRecord> = {}): LeadRecord =>
+    ({
+      _id: new Types.ObjectId('6abaec7ef6a0c545a1ae8a8f'),
+      firstName: 'Carla',
+      lastName: 'Mendes',
+      email: 'carla.mendes@elevate.com.br',
+      cpf: '52998224725',
+      company: {
+        name: 'Elevate Consultoria Ltda',
+        cnpj: '04252011000110',
+      },
+      source: 'landing-page',
+      status: 'NEW',
+      score: 0,
+      createdAt: new Date('2026-01-01T00:00:00.000Z'),
+      updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      ...overrides,
+    }) as LeadRecord;
+
+  const createQuery = (result: unknown) => ({
+    skip: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    lean: vi.fn().mockResolvedValue(result),
   });
 
-  it('cria um lead com valores iniciais controlados pelo sistema', () => {
-    const lead = service.create(validLead);
+  beforeEach(() => {
+    leadModel = {
+      create: vi.fn(),
+      find: vi.fn(),
+      countDocuments: vi.fn(),
+      findById: vi.fn(),
+      findByIdAndUpdate: vi.fn(),
+      findByIdAndDelete: vi.fn(),
+    };
+    service = new LeadsService(leadModel as unknown as Model<LeadRecord>);
+  });
 
-    expect(lead.id.value).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-    );
+  it('cria um lead e converte o documento para a entidade de domínio', async () => {
+    leadModel.create.mockResolvedValue(createRecord());
+
+    const lead = await service.create(validLead);
+
+    expect(lead.id.value).toBe('6abaec7ef6a0c545a1ae8a8f');
     expect(lead.name.firstName).toBe('Carla');
     expect(lead.name.lastName).toBe('Mendes');
     expect(lead.email.value).toBe('carla.mendes@elevate.com.br');
     expect(lead.status.value).toBe('NEW');
     expect(lead.score.value).toBe(0);
-    expect(lead.createdAt).toBeInstanceOf(Date);
-    expect(lead.updatedAt).toBeInstanceOf(Date);
+    expect(lead.createdAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+    expect(lead.updatedAt).toEqual(new Date('2026-01-01T00:00:00.000Z'));
+    expect(leadModel.create).toHaveBeenCalledWith({
+      firstName: 'Carla',
+      lastName: 'Mendes',
+      email: validLead.email,
+      cpf: '52998224725',
+      source: 'landing-page',
+      company: {
+        name: validLead.companyName,
+        cnpj: '04252011000110',
+      },
+    });
   });
 
-  it('lista os leads criados', () => {
-    const createdLead = service.create(validLead);
+  it('lista leads com paginação', async () => {
+    const query = createQuery([createRecord()]);
+    leadModel.find.mockReturnValue(query);
 
-    const leads = service.findAll();
+    const leads = await service.find(2, 10);
 
     expect(leads).toHaveLength(1);
-    expect(leads[0].id.value).toBe(createdLead.id.value);
+    expect(leads[0].id.value).toBe('6abaec7ef6a0c545a1ae8a8f');
+    expect(query.skip).toHaveBeenCalledWith(10);
+    expect(query.limit).toHaveBeenCalledWith(10);
   });
 
-  it('busca um lead pelo ID', () => {
-    const createdLead = service.create(validLead);
-
-    const foundLead = service.findOne(createdLead.id.value);
-
-    expect(foundLead).toBe(createdLead);
+  it('rejeita paginação com valores inválidos', async () => {
+    await expect(service.find(0, 10)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
   });
 
-  it('lanca NotFoundException ao buscar um ID inexistente', () => {
-    expect(() =>
-      service.findOne('550e8400-e29b-41d4-a716-446655440000'),
-    ).toThrow(NotFoundException);
-  });
-
-  it('atualiza campos informados e preserva ID e createdAt', () => {
-    const createdLead = service.create(validLead);
-
-    const updatedLead = service.update(createdLead.id.value, {
-      firstName: 'Carolina',
-      companyName: 'Elevate Growth Ltda',
+  it('conta os leads no banco', async () => {
+    leadModel.countDocuments.mockReturnValue({
+      exec: vi.fn().mockResolvedValue(3),
     });
 
-    expect(updatedLead.id).toBe(createdLead.id);
-    expect(updatedLead.createdAt).toBe(createdLead.createdAt);
+    await expect(service.count()).resolves.toBe(3);
+  });
+
+  it('busca um lead pelo ID', async () => {
+    const query = createQuery(createRecord());
+    leadModel.findById.mockReturnValue(query);
+
+    const foundLead = await service.findById('6abaec7ef6a0c545a1ae8a8f');
+
+    expect(foundLead.id.value).toBe('6abaec7ef6a0c545a1ae8a8f');
+  });
+
+  it('lanca NotFoundException ao buscar um ID inexistente', async () => {
+    leadModel.findById.mockReturnValue(createQuery(null));
+
+    await expect(
+      service.findById('6abaec7ef6a0c545a1ae8a8f'),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it('atualiza apenas os campos enviados e preserva os demais', async () => {
+    const original = createRecord();
+    const updated = createRecord({
+      firstName: 'Carolina',
+      updatedAt: new Date('2026-01-02T00:00:00.000Z'),
+    });
+    leadModel.findById.mockReturnValueOnce(createQuery(original));
+    const updateQuery = createQuery(updated);
+    leadModel.findByIdAndUpdate.mockReturnValue(updateQuery);
+
+    const updatedLead = await service.update(
+      '6abaec7ef6a0c545a1ae8a8f',
+      { firstName: 'Carolina' },
+    );
+
+    expect(leadModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      '6abaec7ef6a0c545a1ae8a8f',
+      { $set: { firstName: 'Carolina' } },
+      { new: true, runValidators: true },
+    );
+    expect(updatedLead.id.value).toBe('6abaec7ef6a0c545a1ae8a8f');
+    expect(updatedLead.createdAt).toEqual(original.createdAt);
     expect(updatedLead.name.firstName).toBe('Carolina');
     expect(updatedLead.name.lastName).toBe('Mendes');
-    expect(updatedLead.company.name).toBe('Elevate Growth Ltda');
+    expect(updatedLead.company.name).toBe('Elevate Consultoria Ltda');
     expect(updatedLead.email.value).toBe(validLead.email);
-    expect(updatedLead.updatedAt.getTime()).toBeGreaterThanOrEqual(
-      createdLead.updatedAt.getTime(),
-    );
-
-    expect(service.findOne(createdLead.id.value)).toBe(updatedLead);
+    expect(updatedLead.updatedAt).toEqual(updated.updatedAt);
   });
 
-  it('remove um lead existente', () => {
-    const createdLead = service.create(validLead);
+  it('remove e retorna um lead existente', async () => {
+    leadModel.findByIdAndDelete.mockReturnValue(createQuery(createRecord()));
 
-    service.remove(createdLead.id.value);
+    const removedLead = await service.remove('6abaec7ef6a0c545a1ae8a8f');
 
-    expect(service.findAll()).toEqual([]);
-    expect(() => service.findOne(createdLead.id.value)).toThrow(
-      NotFoundException,
-    );
+    expect(removedLead.id.value).toBe('6abaec7ef6a0c545a1ae8a8f');
   });
 
-  it('lanca NotFoundException ao remover um ID inexistente', () => {
-    expect(() =>
-      service.remove('550e8400-e29b-41d4-a716-446655440000'),
-    ).toThrow(NotFoundException);
+  it('lanca NotFoundException ao remover um ID inexistente', async () => {
+    leadModel.findByIdAndDelete.mockReturnValue(createQuery(null));
+
+    await expect(
+      service.remove('6abaec7ef6a0c545a1ae8a8f'),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

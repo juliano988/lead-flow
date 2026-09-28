@@ -37,10 +37,15 @@ export class LeadRecord {
   @Prop({ type: CompanySchema, required: true })
   company: CompanyRecord;
 
-  @Prop({ required: true, enum: Object.values(SourceValues) })
+  @Prop({
+    type: String,
+    required: true,
+    enum: Object.values(SourceValues),
+  })
   source: SourceValues;
 
   @Prop({
+    type: String,
     required: true,
     enum: Object.values(StatusValues),
     default: StatusValues.New,
