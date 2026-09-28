@@ -1,10 +1,13 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Get,
   Param,
+  ParseIntPipe,
   Post,
-  UseGuards
+  Query,
+  UseGuards,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
@@ -29,6 +32,24 @@ export class UserController {
       email: new Email(registerUserDto.email),
       passwordHash: registerUserDto.password,
     });
+  }
+
+  @Get()
+  find(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('pageSize', new DefaultValuePipe(10), ParseIntPipe) pageSize: number,
+  ) {
+    const users = this.userService.find(page, pageSize);
+    const count = this.userService.count();
+
+    return {
+      page: page,
+      pageSize: pageSize,
+      pageCount: users.length,
+      totalItems: count,
+      totalPages: Math.ceil(count / pageSize),
+      data: users.map((user) => this.toUserResponse(user)),
+    };
   }
 
   @Get(':id')

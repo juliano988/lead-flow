@@ -1,7 +1,7 @@
 import {
   ConflictException,
   Injectable,
-  NotFoundException
+  NotFoundException,
 } from '@nestjs/common';
 import { User } from './entities/user.entity.js';
 import Email from './value-objects/email.vo.js';
@@ -39,6 +39,18 @@ export class UserService {
     this.users.set(user.id.value, user);
 
     return user;
+  }
+
+  find(page: number, pageSize: number): Array<User> {
+    const skip = (page - 1) * pageSize;
+    const limit = skip + pageSize;
+    const usersKeys = Array.from(this.users.keys()).slice(skip, limit);
+
+    return usersKeys.map((id) => this.users.get(id)) as Array<User>;
+  }
+
+  count(): number {
+    return this.users.size;
   }
 
   findByEmail(email: string): User {
