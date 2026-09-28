@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
 import { UserResponseDto } from './dto/user-response.dto.js';
-import { User, type UserSummary } from './entities/user.entity.js';
+import { User } from './entities/user.entity.js';
 import { UserService } from './user.service.js';
 
 @UseGuards(JwtAuthGuard)
@@ -45,7 +45,7 @@ export class UserController {
     return this.toUserResponse(await this.userService.findByEmail(email));
   }
 
-  private toUserResponse(user: UserSummary): UserResponseDto {
+  private toUserResponse(user: User): UserResponseDto {
     return {
       id: user.id.value,
       firstName: user.name.firstName,

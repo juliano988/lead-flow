@@ -5,8 +5,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { User, type UserSummary } from './entities/user.entity.js';
+import { Model } from 'mongoose';
+import { User } from './entities/user.entity.js';
 import { UserRecord } from './schemas/user.schema.js';
 import Email from './value-objects/email.vo.js';
 import Id from './value-objects/id.vo.js';
@@ -29,30 +29,17 @@ export class UserService {
       throw new ConflictException('E-mail já cadastrado');
     }
 
-    try {
-      const user = await this.userModel.create({
-        firstName: createUserInput.name.firstName,
-        lastName: createUserInput.name.lastName,
-        email: createUserInput.email.value,
-        passwordHash: createUserInput.passwordHash,
-      });
+    const user = await this.userModel.create({
+      firstName: createUserInput.name.firstName,
+      lastName: createUserInput.name.lastName,
+      email: createUserInput.email.value,
+      passwordHash: createUserInput.passwordHash,
+    });
 
-      return this.toDomain(user);
-    } catch (error) {
-      if (
-        typeof error === 'object' &&
-        error !== null &&
-        'code' in error &&
-        error.code === 11000
-      ) {
-        throw new ConflictException('E-mail já cadastrado');
-      }
-
-      throw error;
-    }
+    return this.toDomain(user);
   }
 
-  async find(page: number, pageSize: number): Promise<UserSummary[]> {
+  async find(page: number, pageSize: number): Promise<User[]> {
     if (
       !Number.isInteger(page) ||
       page < 1 ||
@@ -68,7 +55,7 @@ export class UserService {
 
     const users = await this.userModel.find().skip(skip).limit(pageSize).lean();
 
-    return users.map((user) => this.toSummary(user));
+    return users.map((user) => this.toDomain(user));
   }
 
   async count(): Promise<number> {
@@ -76,10 +63,8 @@ export class UserService {
   }
 
   async findByEmail(email: string): Promise<User> {
-    const normalizedEmail = new Email(email).value;
     const user = await this.userModel
-      .findOne({ email: normalizedEmail })
-      .select('+passwordHash')
+      .findOne({ email: new Email(email).value })
       .lean();
 
     if (!user) {
@@ -90,14 +75,7 @@ export class UserService {
   }
 
   async findById(id: string): Promise<User> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('Usuário nao encontrado');
-    }
-
-    const user = await this.userModel
-      .findById(id)
-      .select('+passwordHash')
-      .lean();
+    const user = await this.userModel.findById(id).lean();
 
     if (!user) {
       throw new NotFoundException('Usuário nao encontrado');
@@ -107,18 +85,12 @@ export class UserService {
   }
 
   async existById(id: string): Promise<boolean> {
-    if (!Types.ObjectId.isValid(id)) {
-      return false;
-    }
-
-    return (await this.userModel.exists({ _id: id }).exec()) !== null;
+    return Boolean(await this.userModel.exists({ _id: id }).exec());
   }
 
   async existByEmail(email: string): Promise<boolean> {
-    const normalizedEmail = new Email(email).value;
-
-    return (
-      (await this.userModel.exists({ email: normalizedEmail }).exec()) !== null
+    return Boolean(
+      await this.userModel.exists({ email: new Email(email).value }).exec(),
     );
   }
 
@@ -131,15 +103,5 @@ export class UserService {
       user.createdAt,
       user.updatedAt,
     );
-  }
-
-  private toSummary(user: UserRecord): UserSummary {
-    return {
-      id: new Id(user._id.toString()),
-      name: new Name(user.firstName, user.lastName),
-      email: new Email(user.email),
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
   }
 }

@@ -18,7 +18,7 @@ export class UserRecord {
   @Prop({ required: true, trim: true })
   lastName: string;
 
-  @Prop({ required: true, trim: true, select: false })
+  @Prop({ required: true, trim: true })
   passwordHash: string;
 
   createdAt: Date;

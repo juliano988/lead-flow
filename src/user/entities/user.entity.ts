@@ -12,5 +12,3 @@ export class User {
     readonly updatedAt: Date,
   ) {}
 }
-
-export type UserSummary = Omit<User, 'passwordHash'>;
