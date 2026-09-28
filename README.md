@@ -156,6 +156,43 @@ bun run start:dev
 
 A API fica disponivel em `http://localhost:3000`.
 
+## MongoDB local
+
+O replica set local e iniciado com um unico membro (`rs0`), adequado para
+desenvolvimento e para testar recursos que exigem replica set, como transacoes.
+O volume `mongo_data` preserva os dados entre reinicializacoes.
+
+Inicie o banco:
+
+```bash
+docker compose up -d
+```
+
+Verifique o estado:
+
+```bash
+docker compose ps
+```
+
+URI para a aplicacao executada na maquina host:
+
+```text
+mongodb://leadflow_admin:<MONGO_INITDB_ROOT_PASSWORD>@localhost:27017/leadflow?authSource=admin&replicaSet=rs0
+```
+
+As credenciais locais ficam em `.env`, que nao deve ser commitado. O arquivo
+`.env.example` documenta as variaveis necessarias. A porta do banco fica
+limitada ao host local.
+
+Para parar os containers sem apagar os dados:
+
+```bash
+docker compose down
+```
+
+Essa configuracao e destinada ao desenvolvimento local; nao reutilize as
+credenciais ou a chave do replica set em producao.
+
 ## Testes
 
 ```bash

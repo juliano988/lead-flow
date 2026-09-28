@@ -1,0 +1,32 @@
+services:
+  mongo:
+    image: mongo:8.0
+    container_name: lead-flow-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_REPLICA_SET_KEY: ${MONGO_REPLICA_SET_KEY}
+    entrypoint: ["bash", "-c"]
+    command:
+      - >-
+        printf '%s' "$$MONGO_REPLICA_SET_KEY" > /tmp/mongo-keyfile;
+        if [ "$$(id -u)" = "0" ]; then chown mongodb:mongodb /tmp/mongo-keyfile; fi;
+        chmod 400 /tmp/mongo-keyfile;
+        exec /usr/local/bin/docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /tmp/mongo-keyfile
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --username "$$MONGO_INITDB_ROOT_USERNAME" --password "$$MONGO_INITDB_ROOT_PASSWORD" --authenticationDatabase admin --eval 'try { const status = rs.status(); if (status.members.some((member) => member.stateStr === "PRIMARY")) quit(0); } catch (error) {} try { rs.initiate({_id: "rs0", members: [{_id: 0, host: "localhost:27017"}]}); } catch (error) {} quit(1);'
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+volumes:
+  mongo_data:
