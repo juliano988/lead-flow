@@ -23,12 +23,6 @@ export class AuthService {
   ) {}
 
   async register(registerUserDto: RegisterUserDto): Promise<User> {
-    const user = this.userService.findByEmail(registerUserDto.email);
-
-    if (user) {
-      throw new ConflictException('E-mail já cadastrado');
-    }
-
     const password = new Password(registerUserDto.password);
     const passwordHash = await bcrypt.hash(password.value, 12);
 

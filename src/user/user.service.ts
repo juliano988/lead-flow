@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException
+} from '@nestjs/common';
 import { User } from './entities/user.entity.js';
 import Email from './value-objects/email.vo.js';
 import Id from './value-objects/id.vo.js';
@@ -15,6 +19,14 @@ export class UserService {
   private readonly users: Map<string, User> = new Map<string, User>();
 
   create(cresteUserInput: CresteUserInput): User {
+    const emailExists = Array.from(this.users.values()).some((user) =>
+      user.email.equals(cresteUserInput.email),
+    );
+
+    if (this.users.has(cresteUserInput.id.value) || emailExists) {
+      throw new ConflictException('Usuário já cadastrado');
+    }
+
     const user = new User(
       cresteUserInput.id,
       cresteUserInput.name,
