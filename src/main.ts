@@ -20,7 +20,7 @@ async function bootstrap() {
         );
 
         return new BadRequestException({
-          message: 'Dados da requisicao invalidos',
+          message: 'Dados da requisição inválidos',
           errors: messages,
         });
       },
