@@ -16,8 +16,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  validate(payload: { sub: string; email: string }) {
-    if (!this.userService.existById(payload.sub)) {
+  async validate(payload: { sub: string; email: string }) {
+    if (!(await this.userService.existById(payload.sub))) {
       throw new UnauthorizedException('Token inválido');
     }
 

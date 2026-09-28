@@ -12,3 +12,8 @@ export class User {
     readonly updatedAt: Date,
   ) {}
 }
+
+export type UserSummary = Pick<
+  User,
+  'id' | 'name' | 'email' | 'createdAt' | 'updatedAt'
+>;

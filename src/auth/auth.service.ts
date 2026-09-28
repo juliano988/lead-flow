@@ -1,5 +1,4 @@
 import {
-  ConflictException,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -27,7 +26,6 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password.value, 12);
 
     return this.userService.create({
-      id: new Id(crypto.randomUUID()),
       name: new Name(registerUserDto.firstName, registerUserDto.lastName),
       email: new Email(registerUserDto.email),
       passwordHash,
@@ -37,7 +35,7 @@ export class AuthService {
   async authenticate(login: LoginDto): Promise<string> {
     let user: User;
     try {
-      user = this.userService.findByEmail(login.email);
+      user = await this.userService.findByEmail(login.email);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new UnauthorizedException('E-mail ou senha inválidos');

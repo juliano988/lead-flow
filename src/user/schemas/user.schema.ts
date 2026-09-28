@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 
 @Schema({
   collection: 'users',
@@ -6,8 +7,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
   versionKey: false,
 })
 export class UserRecord {
-  @Prop({ required: true, unique: true, trim: true })
-  id: string;
+  _id: Types.ObjectId;
 
   @Prop({ required: true, unique: true, trim: true, lowercase: true })
   email: string;
