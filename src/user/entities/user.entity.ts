@@ -13,7 +13,4 @@ export class User {
   ) {}
 }
 
-export type UserSummary = Pick<
-  User,
-  'id' | 'name' | 'email' | 'createdAt' | 'updatedAt'
->;
+export type UserSummary = Omit<User, 'passwordHash'>;
